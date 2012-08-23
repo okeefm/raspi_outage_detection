@@ -15,13 +15,11 @@ while(1):
 	#img.show()
 	#find the mean pixel color (RGB) for the camera
 	miv = img.meanColor()
+	#print miv
 	#If the mean image value is below some threshold set as a constant, declare an outage for black levels
 	outage = False
 	if miv < color_threshold:
 		outage = True
-	
-	#figure out if there's a motion outage (not yet implemented)
-	
 	#if there's an outage for this frame, add one to the outage counter	
 	if outage:
 		num_outage_frames += 1
