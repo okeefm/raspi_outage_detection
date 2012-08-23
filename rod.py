@@ -1,15 +1,20 @@
 from SimpleCV import *
-from time import localtime, strftime
+import time
+from time import strftime, localtime
 
 cam = Camera()
 num_outage_frames = 0
 color_threshold = (20, 20, 20)
 outage_threshold = 30
+i = 0
+num_iters = 10000.0
 
 def outage_notify():
 	print "An Outage has occurred at: " + strftime("%Y-%m-%d %H:%M:%S", localtime())
 
-while(1):
+t1 = time.time()
+while(i < num_iters):
+	i = i + 1
 	#get the current frame from the camera
 	img = cam.getImage()
 	#img.show()
@@ -29,3 +34,6 @@ while(1):
 	if (num_outage_frames > outage_threshold):
 		outage_notify()
 		num_outage_frames = 0
+t2 = time.time()
+
+print '%d iterations took %0.3f ms, or %0.5f ms apiece' % (num_iters, (t2-t1)*1000.0, (t2-t1)*1000.0 / num_iters)
