@@ -1,22 +1,44 @@
 from SimpleCV import *
 import time
 from time import strftime, localtime
+import smtplib
+import string
+import ConfigParser
+import io
+
+config = ConfigParser.SafeConfigParser()
+config.read("rod.cfg")
+
+server = smtplib.SMTP_SSL(config.get("email", "host"), config.getint("email", "port"))
+print "connected"
+server.login(config.get("email", "user"), config.get("email", "password"))
+FROM = config.get("email", "from")
+TO = config.get("email", "to").split(",")
+SUBJECT = config.get("email", "subject")
+text = config.get("email", "text")
 
 cam = Camera()
 num_outage_frames = 0
-color_threshold = (20, 20, 20)
-outage_threshold = 30
+color_threshold = (config.getint("outage_params", "red_threshold"), config.getint("outage_params", "blue_threshold"), config.getint("outage_params", "green_threshold"))
+outage_threshold = config.getint("outage_params", "outage_frames")
 i = 0
-num_iters = 10000.0
+num_iters = 300.0
 
 def outage_notify():
 	print "An Outage has occurred at: " + strftime("%Y-%m-%d %H:%M:%S", localtime())
+	BODY = string.join((
+	"From: %s" % FROM,
+	"To: %s" % TO,
+	"Subject: %s" % SUBJECT + " " + strftime("%Y-%m-%d %H:%M:%S", localtime()),
+	"",
+	text + " " + strftime("%Y-%m-%d %H:%M:%S", localtime())), "\r\n")
+	server.sendmail(FROM, TO, BODY)
 
-t1 = time.time()
-while(i < num_iters):
-	i = i + 1
+#t1 = time.time()
+while(1):
 	#get the current frame from the camera
 	img = cam.getImage()
+	#i = i + 1
 	#img.show()
 	#find the mean pixel color (RGB) for the camera
 	miv = img.meanColor()
@@ -34,6 +56,10 @@ while(i < num_iters):
 	if (num_outage_frames > outage_threshold):
 		outage_notify()
 		num_outage_frames = 0
-t2 = time.time()
+	else:
+		time.sleep(0.03)
+#t2 = time.time()
 
-print '%d iterations took %0.3f ms, or %0.5f ms apiece' % (num_iters, (t2-t1)*1000.0, (t2-t1)*1000.0 / num_iters)
+#print '%d iterations took %0.3f ms, or %0.5f ms per iteration' % (num_iters, (t2-t1)*1000.0, (t2-t1)*1000.0 / num_iters)
+
+server.quit()
